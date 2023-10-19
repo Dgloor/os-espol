@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include <fcntl.h>
 #include <unistd.h>
+#include <errno.h>
+#include <string.h>
 
 int main(int argc, char *argv[])
 {
@@ -18,7 +20,16 @@ int main(int argc, char *argv[])
 
         while ((bytes_read = read(STDIN_FILENO, buffer, sizeof(buffer))) > 0)
         {
-            write(STDOUT_FILENO, buffer, bytes_read);
+            if (bytes_read == -1)
+            {
+                perror("Error in read");
+                exit(EXIT_FAILURE);
+            }
+            if (write(STDOUT_FILENO, buffer, bytes_read) == -1)
+            {
+                perror("Error in write");
+                exit(EXIT_FAILURE);
+            }
         }
     }
     else
@@ -28,7 +39,7 @@ int main(int argc, char *argv[])
 
         if (fd == -1)
         {
-            perror("Error in open.\n");
+            perror("Error in open");
             exit(EXIT_FAILURE);
         }
 
@@ -37,7 +48,25 @@ int main(int argc, char *argv[])
 
         while ((bytes_read = read(fd, buffer, sizeof(buffer))) > 0)
         {
-            write(STDOUT_FILENO, buffer, bytes_read);
+            if (bytes_read == -1)
+            {
+                perror("Error in read");
+                close(fd);
+                exit(EXIT_FAILURE);
+            }
+            if (write(STDOUT_FILENO, buffer, bytes_read) == -1)
+            {
+                perror("Error in write");
+                close(fd);
+                exit(EXIT_FAILURE);
+            }
+        }
+
+        if (bytes_read == -1)
+        {
+            perror("Error in read");
+            close(fd);
+            exit(EXIT_FAILURE);
         }
 
         close(fd);
